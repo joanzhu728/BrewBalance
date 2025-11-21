@@ -1,0 +1,5 @@
+{
+  "name": "BrewBalance",
+  "description": "A beer budget tracking app with rollover logic, streak tracking, and calendar visualization.",
+  "requestFramePermissions": []
+}

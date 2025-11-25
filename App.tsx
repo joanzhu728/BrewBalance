@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Settings, Entry, TabView } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
@@ -10,7 +11,7 @@ import Navigation from './components/Navigation';
 import HistoryView from './components/HistoryView';
 import AddEntryScreen from './components/AddEntryScreen';
 import EditEntryModal from './components/EditEntryModal';
-import { Beer } from 'lucide-react';
+import CreativeLogo from './components/CreativeLogo';
 
 const App: React.FC = () => {
   // Load settings from local storage, merging with defaults to ensure robustness
@@ -124,19 +125,23 @@ const App: React.FC = () => {
         {/* Header - Added padding-top safe area for iOS PWA */}
         <header className="px-6 pt-[max(2.5rem,env(safe-area-inset-top))] pb-4 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 flex justify-between items-center border-b border-slate-800 transition-all">
           <div className="flex items-center gap-3">
-             {settings.logo ? (
-                 <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-slate-800">
-                     <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
-                 </div>
-             ) : (
-                 <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
-                    <Beer size={20} fill="currentColor" className="text-white/90" />
-                 </div>
-             )}
+             <div className="w-14 h-14 rounded-xl overflow-hidden shadow-lg border border-slate-800 shrink-0">
+                {settings.logo ? (
+                  <img src={settings.logo} alt="App Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <CreativeLogo />
+                )}
+             </div>
              <h1 className="text-xl font-black tracking-tight text-white">
                 BrewBalance
              </h1>
           </div>
+          {settings.userName && (
+             <div className="text-right">
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none mb-0.5">Hello,</div>
+                <div className="text-sm font-bold text-white leading-none">{settings.userName}</div>
+             </div>
+          )}
         </header>
 
         {/* Content */}

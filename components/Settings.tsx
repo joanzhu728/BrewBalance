@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Settings as SettingsType } from '../types';
-import { Save, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 
 interface SettingsProps {
@@ -12,6 +13,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
   const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state when props change (e.g. after reset)
   useEffect(() => {
@@ -51,12 +53,119 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
     window.location.reload();
   };
 
+  // Handle Image Upload and Resize
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas to resize image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Define max dimensions (512x512 is plenty for an app icon)
+        const MAX_SIZE = 512;
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate aspect ratio to center crop to square
+        const size = Math.min(width, height);
+        const startX = (width - size) / 2;
+        const startY = (height - size) / 2;
+
+        canvas.width = MAX_SIZE;
+        canvas.height = MAX_SIZE;
+
+        if (ctx) {
+          // Draw image cropped to square and resized
+          ctx.drawImage(img, startX, startY, size, size, 0, 0, MAX_SIZE, MAX_SIZE);
+          
+          // Convert to Base64 string (JPEG 0.8 quality to save space)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          handleChange('logo', dataUrl);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="pb-24 h-full flex flex-col">
       <h2 className="text-3xl font-extrabold text-white mb-6 tracking-tight">Settings</h2>
       
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar">
         
+        {/* Profile Section */}
+        <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
+          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <User size={16} /> User Profile
+          </h3>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300">Your Name</label>
+              <input
+                type="text"
+                enterKeyHint="done"
+                value={localSettings.userName || ''}
+                onChange={e => handleChange('userName', e.target.value)}
+                className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none transition-all font-bold text-lg text-white placeholder-slate-700"
+                placeholder="Enter your name"
+              />
+            </div>
+
+            {/* Custom Logo Upload */}
+            <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-300">Custom App Icon</label>
+                <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-950 shrink-0">
+                        {localSettings.logo ? (
+                            <img src={localSettings.logo} alt="Custom Logo" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-700">
+                                <ImageIcon size={24} />
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex-1">
+                         <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleImageUpload} 
+                            className="hidden" 
+                            accept="image/*"
+                         />
+                         <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors flex items-center gap-2"
+                            >
+                                <Upload size={14} /> Upload Photo
+                            </button>
+                            {localSettings.logo && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleChange('logo', null)}
+                                    className="px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 text-xs font-bold rounded-xl transition-colors"
+                                >
+                                    Reset
+                                </button>
+                            )}
+                         </div>
+                         <p className="text-[10px] text-slate-500 mt-2">
+                            Upload a photo from your library. It will be cropped to a square.
+                         </p>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
         {/* Budget Section */}
         <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">

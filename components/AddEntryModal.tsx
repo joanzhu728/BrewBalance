@@ -46,7 +46,6 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Amount ({currency})</label>
             <input
               type="number"
-              autoFocus
               placeholder="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

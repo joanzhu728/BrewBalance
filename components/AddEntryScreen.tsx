@@ -41,7 +41,6 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ onSave, currency }) => 
                         <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 text-center">Amount ({currency})</label>
                         <input
                         type="number"
-                        autoFocus
                         placeholder="0"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}

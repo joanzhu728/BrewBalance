@@ -16,6 +16,11 @@
     <link rel="manifest" href="/manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      /* Reset tap highlight color */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+
       /* Custom scrollbar for a cleaner look */
       ::-webkit-scrollbar {
         width: 6px;
@@ -52,6 +57,13 @@
       .pb-safe-bottom {
         padding-bottom: env(safe-area-inset-bottom);
       }
+
+      /* CRITICAL FIX FOR IOS PWA KEYBOARD */
+      /* Force user-select text on inputs to ensure focus works */
+      input, textarea, select {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+      }
     </style>
   <script type="importmap">
 {
@@ -66,7 +78,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-50 antialiased overscroll-none">
+  <body class="bg-slate-950 text-slate-50 antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -13,6 +13,7 @@ export interface Settings {
   startDate: string; // YYYY-MM-DD
   endDate: string | null; // YYYY-MM-DD or null
   logo: string | null; // Base64 encoded image string
+  customBudgets?: Record<string, number>; // Date (YYYY-MM-DD) -> Amount
 }
 
 export interface Entry {
@@ -32,6 +33,7 @@ export interface DailyStats {
   remaining: number;
   status: BudgetStatus;
   entries: Entry[];
+  isCustomBudget?: boolean;
 }
 
 export type TabView = 'dashboard' | 'add' | 'calendar' | 'history' | 'settings';

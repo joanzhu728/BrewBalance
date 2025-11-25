@@ -41,8 +41,16 @@ export const calculateStats = (
     // Logic: It applies if we are >= startDate (already handled by loop start)
     // AND if we are <= endDate (if endDate exists)
     let baseBudget = 0;
+    let isCustomBudget = false;
+
     if (!settings.endDate || currentDateStr <= settings.endDate) {
-        baseBudget = isWknd ? settings.weekendBudget : settings.weekdayBudget;
+        // Check for custom override first
+        if (settings.customBudgets && settings.customBudgets[currentDateStr] !== undefined) {
+            baseBudget = settings.customBudgets[currentDateStr];
+            isCustomBudget = true;
+        } else {
+            baseBudget = isWknd ? settings.weekendBudget : settings.weekdayBudget;
+        }
     }
 
     const dayEntries = entriesByDate[currentDateStr] || [];
@@ -71,7 +79,8 @@ export const calculateStats = (
       spent,
       remaining,
       status,
-      entries: dayEntries
+      entries: dayEntries,
+      isCustomBudget
     };
 
     // Logic for next day rollover

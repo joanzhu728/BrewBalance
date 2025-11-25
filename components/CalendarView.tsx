@@ -2,15 +2,18 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DailyStats, BudgetStatus, Settings } from '../types';
 import { getMonthDates, formatDateISO } from '../utils/dateUtils';
+import DayDetailModal from './DayDetailModal';
 
 interface CalendarViewProps {
   statsMap: Record<string, DailyStats>;
   settings: Settings;
+  onUpdateSettings: (newSettings: Settings) => void;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdateSettings }) => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDayStats, setSelectedDayStats] = useState<DailyStats | null>(null);
 
   const handlePrevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
@@ -46,6 +49,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings }) => {
   };
     
   const todayISO = formatDateISO(new Date());
+
+  const handleDayClick = (dateStr: string) => {
+      const stats = statsMap[dateStr];
+      if (stats) {
+          setSelectedDayStats(stats);
+      }
+  };
+
+  const handleSaveBudget = (date: string, amount: number) => {
+      const updatedCustomBudgets = { ...(settings.customBudgets || {}) };
+      updatedCustomBudgets[date] = amount;
+      onUpdateSettings({ ...settings, customBudgets: updatedCustomBudgets });
+  };
+
+  const handleResetBudget = (date: string) => {
+      const updatedCustomBudgets = { ...(settings.customBudgets || {}) };
+      delete updatedCustomBudgets[date];
+      onUpdateSettings({ ...settings, customBudgets: updatedCustomBudgets });
+  };
 
   return (
     <div className="h-full flex flex-col pb-20">
@@ -84,19 +106,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings }) => {
             
             const statusClass = hasStats ? getStatusColor(stats.status, isFuture) : 'bg-slate-950 border-slate-800 text-slate-700';
             const currencySymbol = settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
+            const isCustom = stats?.isCustomBudget;
 
             return (
-              <div 
+              <button 
                 key={dateStr} 
-                className={`aspect-square rounded-2xl border flex flex-col items-center justify-center p-0.5 relative transition-all ${statusClass} ${isToday ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900 z-10' : ''}`}
+                onClick={() => handleDayClick(dateStr)}
+                disabled={!hasStats}
+                className={`aspect-square rounded-2xl border flex flex-col items-center justify-center p-0.5 relative transition-all active:scale-95 ${statusClass} ${isToday ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900 z-10' : ''}`}
               >
-                <span className={`text-xs font-bold ${hasStats ? (isFuture ? 'opacity-70' : '') : 'opacity-50'}`}>{dayNum}</span>
+                <div className="flex items-start gap-0.5">
+                     <span className={`text-xs font-bold ${hasStats ? (isFuture ? 'opacity-70' : '') : 'opacity-50'}`}>{dayNum}</span>
+                     {isCustom && <div className="w-1 h-1 rounded-full bg-amber-500 mt-1"></div>}
+                </div>
                 {hasStats && (
                     <span className={`text-[9px] mt-0.5 font-bold truncate w-full text-center ${isFuture ? 'opacity-60 italic' : 'opacity-90'}`}>
                         {currencySymbol}{Math.round(stats.remaining)}
                     </span>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
@@ -113,6 +141,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings }) => {
            </div>
         </div>
       </div>
+
+      <DayDetailModal 
+        isOpen={!!selectedDayStats}
+        onClose={() => setSelectedDayStats(null)}
+        stats={selectedDayStats}
+        currency={settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency}
+        onSaveBudget={handleSaveBudget}
+        onResetBudget={handleResetBudget}
+      />
     </div>
   );
 };

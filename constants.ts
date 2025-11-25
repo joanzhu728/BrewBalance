@@ -1,13 +1,15 @@
 import { Settings } from './types';
+import { getTodayISO } from './utils/dateUtils';
 
 export const DEFAULT_SETTINGS: Settings = {
   weekdayBudget: 0, // Default to 0 so it's not set by default
   weekendBudget: 0, // Default to 0 so it's not set by default
   currency: 'JPY',
   alarmThreshold: 0.8, // 80%
-  startDate: new Date().toISOString().split('T')[0], // Default to today if new
+  startDate: getTodayISO(), // Use local time today
   endDate: null,
   logo: null,
+  customBudgets: {},
 };
 
 export const STORAGE_KEYS = {

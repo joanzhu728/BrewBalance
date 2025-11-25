@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Settings, Entry, TabView } from './types';
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './constants';
 import { calculateStats, calculateStreak } from './utils/financeHelpers';
+import { getTodayISO } from './utils/dateUtils';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import SettingsView from './components/Settings';
@@ -18,12 +19,19 @@ const App: React.FC = () => {
       const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (stored) {
         const parsed = JSON.parse(stored);
-        return { ...DEFAULT_SETTINGS, ...parsed };
+        // Ensure defaults are merged
+        const merged = { ...DEFAULT_SETTINGS, ...parsed };
+        
+        // Fix for startDate legacy issues (if user has old UTC date saved)
+        // If it's a fresh install or data seems missing, ensure local date is used.
+        // However, we respect saved start date if it exists.
+        return merged;
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
     }
-    return DEFAULT_SETTINGS;
+    // If no settings found, use local today as start date
+    return { ...DEFAULT_SETTINGS, startDate: getTodayISO() };
   });
 
   // Load entries from local storage
@@ -94,11 +102,11 @@ const App: React.FC = () => {
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.ENTRIES);
     
-    // Create a fresh copy of defaults to ensure no reference issues
-    // and reset the start date to TODAY, not when the app first loaded
+    // Create a fresh copy of defaults and ensure local date
     const freshSettings = { 
       ...DEFAULT_SETTINGS,
-      startDate: new Date().toISOString().split('T')[0]
+      startDate: getTodayISO(),
+      customBudgets: {}
     };
     
     // Reset React State
@@ -158,7 +166,11 @@ const App: React.FC = () => {
             />
           )}
           {currentTab === 'calendar' && (
-            <CalendarView statsMap={statsMap} settings={settings} />
+            <CalendarView 
+                statsMap={statsMap} 
+                settings={settings} 
+                onUpdateSettings={setSettings}
+            />
           )}
           {currentTab === 'settings' && (
             <SettingsView 

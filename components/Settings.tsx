@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsType, Entry } from '../types';
-import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2, Mail } from 'lucide-react';
+import { Settings as SettingsType, Entry, DailyStats } from '../types';
+import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2 } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 
 interface SettingsProps {
   settings: SettingsType;
   entries: Entry[];
+  statsMap: Record<string, DailyStats>;
   onSave: (newSettings: SettingsType) => void;
   onReset: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, entries, onSave, onReset }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave, onReset }) => {
   const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [exportEmail, setExportEmail] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state when props change (e.g. after reset)
@@ -97,63 +97,64 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, onSave, onReset 
 
   // --- Export Logic ---
   const generateCSV = (): string => {
-    // Header
-    const headers = ["Date", "Amount", "Note", "Timestamp", "ID"];
+    // Columns: date, daily base budget, rollover from previous day, daily actual spent, note, and daily current balance
+    const headers = [
+        "Date", 
+        "Daily Base Budget", 
+        "Rollover from Previous Day", 
+        "Daily Actual Spent", 
+        "Note", 
+        "Daily Current Balance"
+    ];
     
-    // Sort by Date Descending
-    const sortedEntries = [...entries].sort((a, b) => b.timestamp - a.timestamp);
-    
-    // Rows
-    const rows = sortedEntries.map(e => {
-        const escapedNote = `"${(e.note || '').replace(/"/g, '""')}"`;
+    // Sort dates descending
+    const allDates = Object.keys(statsMap).sort((a, b) => b.localeCompare(a));
+    const today = new Date().toISOString().split('T')[0];
+
+    // Filter out future dates that don't have entries, to keep the export clean
+    // We want to export:
+    // 1. All days from Start Date up to Today
+    // 2. Any future days that actually have entries (rare, but possible if user logged ahead)
+    const exportRows = allDates.filter(date => {
+        const isPastOrToday = date <= today;
+        const hasEntries = statsMap[date].entries.length > 0;
+        return isPastOrToday || hasEntries;
+    }).map(date => {
+        const stats = statsMap[date];
+        
+        // Aggregate notes for the day
+        const notes = stats.entries
+            .map(e => e.note)
+            .filter(n => n && n.trim() !== '')
+            .join('; ');
+            
+        // Escape notes for CSV (handle quotes)
+        const escapedNote = `"${notes.replace(/"/g, '""')}"`;
+
         return [
-            e.date,
-            e.amount,
+            stats.date,
+            stats.baseBudget,
+            stats.rollover.toFixed(2),
+            stats.spent.toFixed(2),
             escapedNote,
-            new Date(e.timestamp).toISOString(),
-            e.id
+            stats.remaining.toFixed(2)
         ].join(',');
     });
 
-    return [headers.join(','), ...rows].join('\n');
-  };
-
-  const handleExportToEmail = () => {
-    if (!exportEmail) {
-        alert("Please enter a recipient email address.");
-        return;
-    }
-
-    const csvContent = generateCSV();
-    const subject = encodeURIComponent("BrewBalance Data Export");
-    const body = encodeURIComponent(
-`Here is your BrewBalance data export.
-
-${csvContent}
-`
-    );
-
-    const mailtoLink = `mailto:${exportEmail}?subject=${subject}&body=${body}`;
-
-    // Browser URL length limits are typically around 2000 chars.
-    if (mailtoLink.length > 2000) {
-        alert("Your history is too long to send via a direct email link. Please use the 'Share as File' button instead.");
-    } else {
-        window.location.href = mailtoLink;
-    }
+    return [headers.join(','), ...exportRows].join('\n');
   };
 
   const handleShareFile = async () => {
     const csvContent = generateCSV();
     const blob = new Blob([csvContent], { type: 'text/csv' });
-    const file = new File([blob], 'brewbalance_export.csv', { type: 'text/csv' });
+    const file = new File([blob], 'brewbalance_history.csv', { type: 'text/csv' });
 
     if (navigator.share && navigator.canShare({ files: [file] })) {
         try {
             await navigator.share({
                 files: [file],
-                title: 'BrewBalance Export',
-                text: 'Here is my BrewBalance expense history in CSV format.'
+                title: 'BrewBalance History',
+                text: 'Here is my BrewBalance budget history.'
             });
         } catch (error) {
             console.log('Share cancelled or failed', error);
@@ -163,7 +164,7 @@ ${csvContent}
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'brewbalance_export.csv';
+        a.download = 'brewbalance_history.csv';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -359,37 +360,16 @@ ${csvContent}
              </h3>
              
              <div className="space-y-4">
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-300">Recipient Email (Optional)</label>
-                    <input
-                        type="email"
-                        value={exportEmail}
-                        onChange={(e) => setExportEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 focus:border-amber-500 outline-none text-white text-sm"
-                    />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        type="button"
-                        onClick={handleExportToEmail}
-                        className="py-3 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-xs border border-slate-700"
-                    >
-                        <Mail size={18} className="text-amber-500" />
-                        <span>Send to Email</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleShareFile}
-                        className="py-3 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-xs border border-slate-700"
-                    >
-                        <Share2 size={18} className="text-emerald-500" />
-                        <span>Share / Save CSV</span>
-                    </button>
-                </div>
+                <button
+                    type="button"
+                    onClick={handleShareFile}
+                    className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 shadow-md"
+                >
+                    <Share2 size={18} className="text-emerald-500" />
+                    <span>Share / Save CSV</span>
+                </button>
                 <p className="text-[10px] text-slate-500 leading-tight">
-                    "Send to Email" opens your mail app. For large histories, use "Share CSV" to attach the file instead.
+                    Exports your complete history including daily budgets, rollovers, and balances.
                 </p>
              </div>
         </div>

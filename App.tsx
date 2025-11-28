@@ -181,6 +181,7 @@ const App: React.FC = () => {
             <SettingsView 
               settings={settings}
               entries={entries} 
+              statsMap={statsMap}
               onSave={(newSettings) => {
                 setSettings(newSettings);
                 setCurrentTab('dashboard');

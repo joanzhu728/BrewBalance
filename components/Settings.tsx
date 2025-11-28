@@ -1,18 +1,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsType } from '../types';
-import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload } from 'lucide-react';
+import { Settings as SettingsType, Entry } from '../types';
+import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2, Mail } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 
 interface SettingsProps {
   settings: SettingsType;
+  entries: Entry[];
   onSave: (newSettings: SettingsType) => void;
   onReset: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, entries, onSave, onReset }) => {
   const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [exportEmail, setExportEmail] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync local state when props change (e.g. after reset)
@@ -91,6 +93,82 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  // --- Export Logic ---
+  const generateCSV = (): string => {
+    // Header
+    const headers = ["Date", "Amount", "Note", "Timestamp", "ID"];
+    
+    // Sort by Date Descending
+    const sortedEntries = [...entries].sort((a, b) => b.timestamp - a.timestamp);
+    
+    // Rows
+    const rows = sortedEntries.map(e => {
+        const escapedNote = `"${(e.note || '').replace(/"/g, '""')}"`;
+        return [
+            e.date,
+            e.amount,
+            escapedNote,
+            new Date(e.timestamp).toISOString(),
+            e.id
+        ].join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+  };
+
+  const handleExportToEmail = () => {
+    if (!exportEmail) {
+        alert("Please enter a recipient email address.");
+        return;
+    }
+
+    const csvContent = generateCSV();
+    const subject = encodeURIComponent("BrewBalance Data Export");
+    const body = encodeURIComponent(
+`Here is your BrewBalance data export.
+
+${csvContent}
+`
+    );
+
+    const mailtoLink = `mailto:${exportEmail}?subject=${subject}&body=${body}`;
+
+    // Browser URL length limits are typically around 2000 chars.
+    if (mailtoLink.length > 2000) {
+        alert("Your history is too long to send via a direct email link. Please use the 'Share as File' button instead.");
+    } else {
+        window.location.href = mailtoLink;
+    }
+  };
+
+  const handleShareFile = async () => {
+    const csvContent = generateCSV();
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const file = new File([blob], 'brewbalance_export.csv', { type: 'text/csv' });
+
+    if (navigator.share && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: 'BrewBalance Export',
+                text: 'Here is my BrewBalance expense history in CSV format.'
+            });
+        } catch (error) {
+            console.log('Share cancelled or failed', error);
+        }
+    } else {
+        // Fallback for desktop or non-supported browsers: Direct Download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'brewbalance_export.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
   };
 
   return (
@@ -271,10 +349,49 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, onReset }) => {
                   />
                 </div>
             </div>
-             <p className="text-xs text-slate-500">
-                 Budgets apply to all days between Start Date and End Date. If End Date is empty, it applies indefinitely.
-             </p>
           </div>
+        </div>
+
+        {/* Data Management Section */}
+        <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
+             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <FileText size={16} /> Data Export
+             </h3>
+             
+             <div className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-300">Recipient Email (Optional)</label>
+                    <input
+                        type="email"
+                        value={exportEmail}
+                        onChange={(e) => setExportEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full p-3 bg-slate-950 rounded-xl border border-slate-800 focus:border-amber-500 outline-none text-white text-sm"
+                    />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={handleExportToEmail}
+                        className="py-3 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-xs border border-slate-700"
+                    >
+                        <Mail size={18} className="text-amber-500" />
+                        <span>Send to Email</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleShareFile}
+                        className="py-3 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex flex-col items-center justify-center gap-1 text-xs border border-slate-700"
+                    >
+                        <Share2 size={18} className="text-emerald-500" />
+                        <span>Share / Save CSV</span>
+                    </button>
+                </div>
+                <p className="text-[10px] text-slate-500 leading-tight">
+                    "Send to Email" opens your mail app. For large histories, use "Share CSV" to attach the file instead.
+                </p>
+             </div>
         </div>
 
         <div className="pt-2">

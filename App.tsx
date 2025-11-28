@@ -179,7 +179,8 @@ const App: React.FC = () => {
           )}
           {currentTab === 'settings' && (
             <SettingsView 
-              settings={settings} 
+              settings={settings}
+              entries={entries} 
               onSave={(newSettings) => {
                 setSettings(newSettings);
                 setCurrentTab('dashboard');

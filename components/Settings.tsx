@@ -146,8 +146,19 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
 
   const handleShareFile = async () => {
     const csvContent = generateCSV();
+    const now = new Date();
+    // Format: YYYY-MM-DD_HH-mm-ss
+    const timestamp = now.getFullYear() + '-' + 
+                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(now.getDate()).padStart(2, '0') + '_' + 
+                      String(now.getHours()).padStart(2, '0') + '-' + 
+                      String(now.getMinutes()).padStart(2, '0') + '-' + 
+                      String(now.getSeconds()).padStart(2, '0');
+                      
+    const filename = `brewbalance_history_${timestamp}.csv`;
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
-    const file = new File([blob], 'brewbalance_history.csv', { type: 'text/csv' });
+    const file = new File([blob], filename, { type: 'text/csv' });
 
     if (navigator.share && navigator.canShare({ files: [file] })) {
         try {
@@ -164,7 +175,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'brewbalance_history.csv';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

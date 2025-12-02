@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Flame, TrendingUp, ArrowRight, History, Trophy, Calendar, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Flame, TrendingUp, ArrowRight, History, Trophy, Calendar, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle, Sparkles, PiggyBank } from 'lucide-react';
 import { DailyStats, BudgetStatus, Settings, Challenge, ChallengeStatus } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
@@ -386,19 +386,31 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                         </div>
                     </div>
                     
-                    <h1 className="text-lg font-black text-white mb-1 leading-tight tracking-tight break-words">
-                        {settings.activeChallenge.name}
-                    </h1>
-                    
-                    {/* Stats Row in Header */}
-                    <div className="flex items-center gap-2 mt-2">
-                        <div className={`flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-950/30 px-2 py-1 rounded-lg border border-white/5`}>
-                                <Calendar size={10} className={ui.color}/>
-                                <span>Day <span className="text-white">{challengeStats.dayNumber}</span> / {challengeStats.totalDays}</span>
+                    <div className="flex flex-col mb-2">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                            <h1 className="text-2xl font-black text-white leading-tight tracking-tight break-words">
+                                {settings.activeChallenge.name}
+                            </h1>
+                            {/* Stats moved here */}
+                            <div className="flex items-center gap-2 ml-auto shrink-0">
+                                <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
+                                    Day <span className="text-white">{challengeStats.dayNumber}</span>/{challengeStats.totalDays}
+                                </span>
+                                <span className="text-slate-600 font-bold hidden sm:inline">•</span>
+                                <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
+                                    <span className="text-white">{challengeStats.daysLeft}</span> Days Left
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-slate-950/30 px-2 py-1 rounded-lg border border-white/5">
-                                <span><span className="text-white">{challengeStats.daysLeft}</span> Days Left</span>
-                        </div>
+
+                        {settings.activeChallenge.purpose && (
+                            <div className="flex items-start gap-2 mt-1">
+                                <Target className={`shrink-0 mt-1 ${ui.color}`} size={16} />
+                                <span className="text-lg font-bold text-slate-200 leading-tight">
+                                    {settings.activeChallenge.purpose}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
            </div>
@@ -425,49 +437,49 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
             </div>
         ) : (
             // --- NORMAL VIEW ---
-            <div className={`relative p-4 rounded-[2.5rem] border ${statusDetails.border} ${statusDetails.bg} transition-all duration-500 shadow-lg flex flex-col flex-1 min-h-[400px]`}>
+            <div className={`relative p-5 rounded-[2.5rem] border ${statusDetails.border} ${statusDetails.bg} transition-all duration-500 shadow-lg flex flex-col flex-1 min-h-0`}>
                 
                 {/* Card Header: Label + Streak */}
-                <div className="flex justify-between items-center mb-2 shrink-0">
-                    <h2 className={`text-base font-black ${statusDetails.text} uppercase tracking-widest`}>{statusDetails.label}</h2>
+                <div className="flex justify-between items-start mb-4 shrink-0">
+                    <h2 className={`text-base font-black ${statusDetails.text} uppercase tracking-widest mt-2`}>{statusDetails.label}</h2>
                     
-                    {/* Integrated Streak into Header */}
-                    <div className="flex items-center gap-1.5 bg-slate-900/40 px-3 py-1.5 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
-                        <Flame size={14} className="text-amber-500 drop-shadow-[0_0_5px_rgba(245,158,11,0.5)]" fill="currentColor" />
-                        <span className="text-xs font-black text-white leading-none">{streak} <span className="text-[8px] font-bold text-slate-400 uppercase">Days</span></span>
+                    {/* Bigger Streak Badge */}
+                    <div className="flex items-center gap-2 bg-slate-900/40 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
+                        <Flame size={22} className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" fill="currentColor" />
+                        <span className="text-xl font-black text-white leading-none">{streak} <span className="text-[10px] font-bold text-slate-400 uppercase">Days</span></span>
                     </div>
                 </div>
 
                 {isBudgetSet && (
-                    <div className="flex-1 flex flex-col justify-center gap-4">
-                        {/* Formula Display - Bigger */}
+                    <div className="flex-1 flex flex-col justify-start gap-4 overflow-hidden">
+                        {/* Formula Display - Kept High */}
                         <div className="bg-slate-900/40 p-4 rounded-2xl border border-white/5 backdrop-blur-sm shrink-0">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3 text-center">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">
                                 Total Available Calculation
                             </p>
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between px-1">
                                     <div className="flex flex-col items-center gap-1">
-                                    <span className="text-slate-300 font-bold text-lg">{currency}{todayStats.baseBudget}</span>
+                                    <span className="text-slate-300 font-black text-xl">{currency}{todayStats.baseBudget}</span>
                                     <span className="text-[9px] font-bold text-slate-500 uppercase">Base</span>
                                     </div>
-                                    <span className="text-slate-500 font-bold text-xl">+</span>
+                                    <span className="text-slate-500 font-black text-2xl">+</span>
                                     <div className="flex flex-col items-center gap-1">
-                                    <span className={`font-bold text-lg ${todayStats.rollover < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    <span className={`font-black text-xl ${todayStats.rollover < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                                         {todayStats.rollover < 0 ? '-' : ''}{currency}{Math.abs(Math.round(todayStats.rollover))}
                                     </span>
                                     <span className="text-[9px] font-bold text-slate-500 uppercase">Rollover</span>
                                     </div>
-                                    <span className="text-slate-500 font-bold text-xl">=</span>
+                                    <span className="text-slate-500 font-black text-2xl">=</span>
                                     <div className="flex flex-col items-center gap-1">
-                                    <span className="text-white font-bold text-lg border-b border-dashed border-slate-600">{currency}{Math.round(todayStats.totalAvailable)}</span>
+                                    <span className="text-white font-black text-2xl border-b-2 border-dashed border-slate-600">{currency}{Math.round(todayStats.totalAvailable)}</span>
                                     <span className="text-[9px] font-bold text-slate-500 uppercase">Total</span>
                                     </div>
                             </div>
                         </div>
 
-                        {/* Current Balance - Main Focus */}
-                        <div className="text-center py-2 shrink-0">
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">
+                        {/* Current Balance - Made Smaller */}
+                        <div className="text-center shrink-0 flex-1 flex flex-col justify-center">
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
                                 Current Balance
                             </p>
                             <p className={`text-6xl sm:text-7xl font-black tracking-tighter drop-shadow-sm leading-none ${todayStats.remaining >= 0 ? 'text-amber-400' : 'text-red-500'}`}>
@@ -477,29 +489,29 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                     </div>
                 )}
                 
-                {/* Footer: Pie + Spent */}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5 shrink-0">
+                {/* Footer: Pie + Spent - Bigger Pie */}
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5 shrink-0">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-0.5">Spent Today</span>
-                        <span className="text-2xl font-bold text-slate-300 leading-none">
+                        <span className="text-3xl font-black text-slate-300 leading-none">
                             {currency}{todayStats.spent}
                         </span>
                     </div>
-                    {/* Chart */}
-                    <div className="h-20 w-20 relative">
+                    {/* Bigger Chart */}
+                    <div className="h-32 w-32 relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                             <Pie
                                 data={chartData}
                                 cx="50%"
                                 cy="50%"
-                                innerRadius={24}
-                                outerRadius={32}
+                                innerRadius={40}
+                                outerRadius={55}
                                 startAngle={90}
                                 endAngle={-270}
                                 dataKey="value"
                                 stroke="none"
-                                cornerRadius={3}
+                                cornerRadius={4}
                                 paddingAngle={isOverBudget || !isBudgetSet ? 0 : 5}
                             >
                                 {isOverBudget ? (
@@ -515,7 +527,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                             </Pie>
                             </PieChart>
                         </ResponsiveContainer>
-                        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase">
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-black text-slate-400 uppercase">
                             {isBudgetSet ? `${Math.round((todayStats.spent / (todayStats.totalAvailable || 1)) * 100)}%` : '--'}
                         </div>
                     </div>
@@ -523,10 +535,23 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
             </div>
         )}
 
-        <div className="mt-2 text-center shrink-0">
-             <p className="text-[10px] text-slate-600 font-medium">
-                 Remaining budget rolls over to tomorrow.
-             </p>
+        <div className="mt-4 mb-2 text-center shrink-0 px-2">
+            {settings.activeChallenge ? (
+                <div className="mx-2 mb-2 py-4 px-4 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center gap-3 shadow-sm text-center">
+                    <div className="bg-emerald-500/20 p-2 rounded-full text-emerald-400 hidden sm:block">
+                        <PiggyBank size={18} />
+                    </div>
+                    <p className="text-emerald-100 font-bold text-sm">
+                        Push your limits! Save extra today for your <span className="text-white">{settings.activeChallenge.purpose || 'goal'}</span>.
+                    </p>
+                </div>
+            ) : (
+                <div className="bg-slate-900/80 border border-slate-800 rounded-xl py-2 px-4 inline-block backdrop-blur-sm shadow-sm">
+                    <p className="text-slate-400 font-bold text-sm">
+                        💰 Remaining budget rolls over to tomorrow
+                    </p>
+                </div>
+            )}
         </div>
       </div>
 

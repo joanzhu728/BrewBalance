@@ -2,7 +2,7 @@
 import { Settings } from './types';
 import { getTodayISO } from './utils/dateUtils';
 
-export const APP_VERSION = '1.0.5';
+export const APP_VERSION = '1.0.8';
 
 export const DEFAULT_SETTINGS: Settings = {
   weekdayBudget: 0, // Default to 0 so it's not set by default
@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS: Settings = {
   logo: null,
   customBudgets: {},
   userName: '',
+  activeChallenge: null,
+  pastChallenges: [],
 };
 
 export const STORAGE_KEYS = {

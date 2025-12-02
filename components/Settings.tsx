@@ -17,7 +17,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync local state when props change (e.g. after reset)
+  // Sync local state when props change
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
@@ -27,7 +27,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
   };
   
   const handleBudgetChange = (field: keyof SettingsType, value: string) => {
-    // Handle comma for international inputs
     const cleanVal = value.replace(',', '.');
     if (cleanVal === '' || /^\d*\.?\d*$/.test(cleanVal)) {
         const numVal = parseFloat(cleanVal);
@@ -55,7 +54,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
     window.location.reload();
   };
 
-  // Handle Image Upload and Resize
+  // --- Image Upload Logic ---
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -64,28 +63,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Create canvas to resize image
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // Define max dimensions (512x512 is plenty for an app icon)
         const MAX_SIZE = 512;
         let width = img.width;
         let height = img.height;
-
-        // Calculate aspect ratio to center crop to square
         const size = Math.min(width, height);
         const startX = (width - size) / 2;
         const startY = (height - size) / 2;
-
         canvas.width = MAX_SIZE;
         canvas.height = MAX_SIZE;
-
         if (ctx) {
-          // Draw image cropped to square and resized
           ctx.drawImage(img, startX, startY, size, size, 0, 0, MAX_SIZE, MAX_SIZE);
-          
-          // Convert to Base64 string (JPEG 0.8 quality to save space)
           const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
           handleChange('logo', dataUrl);
         }
@@ -97,47 +86,39 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
 
   // --- Export Logic ---
   const generateCSV = (): string => {
-    // Columns: date, daily base budget, rollover from previous day, daily actual spent, note, and daily current balance
     const headers = [
         "Date", 
         "Daily Base Budget", 
         "Rollover from Previous Day", 
         "Daily Actual Spent", 
         "Note", 
-        "Daily Current Balance"
+        "Daily Current Balance",
+        "Challenge Saved"
     ];
     
-    // Sort dates descending
     const allDates = Object.keys(statsMap).sort((a, b) => b.localeCompare(a));
     const today = new Date().toISOString().split('T')[0];
 
-    // Filter out future dates that don't have entries, to keep the export clean
-    // We want to export:
-    // 1. All days from Start Date up to Today
-    // 2. Any future days that actually have entries (rare, but possible if user logged ahead)
     const exportRows = allDates.filter(date => {
         const isPastOrToday = date <= today;
         const hasEntries = statsMap[date].entries.length > 0;
         return isPastOrToday || hasEntries;
     }).map(date => {
         const stats = statsMap[date];
-        
-        // Aggregate notes for the day
         const notes = stats.entries
             .map(e => e.note)
             .filter(n => n && n.trim() !== '')
             .join('; ');
-            
-        // Escape notes for CSV (handle quotes)
         const escapedNote = `"${notes.replace(/"/g, '""')}"`;
-
+        
         return [
             stats.date,
             stats.baseBudget,
             stats.rollover.toFixed(2),
             stats.spent.toFixed(2),
             escapedNote,
-            stats.remaining.toFixed(2)
+            stats.remaining.toFixed(2),
+            stats.isChallengeDay ? stats.challengeSavedSoFar?.toFixed(2) : ''
         ].join(',');
     });
 
@@ -147,7 +128,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
   const handleShareFile = async () => {
     const csvContent = generateCSV();
     const now = new Date();
-    // Format: YYYY-MM-DD_HH-mm-ss
     const timestamp = now.getFullYear() + '-' + 
                       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
                       String(now.getDate()).padStart(2, '0') + '_' + 
@@ -156,7 +136,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
                       String(now.getSeconds()).padStart(2, '0');
                       
     const filename = `brewbalance_history_${timestamp}.csv`;
-
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const file = new File([blob], filename, { type: 'text/csv' });
 
@@ -171,7 +150,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
             console.log('Share cancelled or failed', error);
         }
     } else {
-        // Fallback for desktop or non-supported browsers: Direct Download
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -194,7 +172,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
             <User size={16} /> User Profile
           </h3>
-          
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-300">Your Name</label>
@@ -207,8 +184,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
                 placeholder="Enter your name"
               />
             </div>
-
-            {/* Custom Logo Upload */}
             <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-300">Custom App Icon</label>
                 <div className="flex items-center gap-4">
@@ -222,13 +197,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
                         )}
                     </div>
                     <div className="flex-1">
-                         <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleImageUpload} 
-                            className="hidden" 
-                            accept="image/*"
-                         />
+                         <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
                          <div className="flex gap-2">
                             <button
                                 type="button"
@@ -247,9 +216,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
                                 </button>
                             )}
                          </div>
-                         <p className="text-[10px] text-slate-500 mt-2">
-                            Upload a photo from your library. It will be cropped to a square.
-                         </p>
                     </div>
                 </div>
             </div>
@@ -261,7 +227,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
             Daily Targets
           </h3>
-          
           <div className="space-y-5">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-300">Weekday Budget</label>
@@ -304,7 +269,6 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
             Configuration
           </h3>
-          
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-300">Currency Symbol</label>
@@ -364,27 +328,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
           </div>
         </div>
 
-        {/* Data Management Section */}
-        <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
-             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <FileText size={16} /> Data Export
-             </h3>
-             
-             <div className="space-y-4">
-                <button
-                    type="button"
-                    onClick={handleShareFile}
-                    className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 shadow-md"
-                >
-                    <Share2 size={18} className="text-emerald-500" />
-                    <span>Share / Save CSV</span>
-                </button>
-                <p className="text-[10px] text-slate-500 leading-tight">
-                    Exports your complete history including daily budgets, rollovers, and balances.
-                </p>
-             </div>
-        </div>
-
+        {/* SAVE BUTTON MOVED HERE */}
         <div className="pt-2">
             <button
                 type="submit"
@@ -394,12 +338,28 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
             </button>
         </div>
 
+        {/* Data Management Section */}
+        <div className="bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-800">
+             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <FileText size={16} /> Data Export
+             </h3>
+             <div className="space-y-4">
+                <button
+                    type="button"
+                    onClick={handleShareFile}
+                    className="w-full py-4 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-700 shadow-md"
+                >
+                    <Share2 size={18} className="text-emerald-500" />
+                    <span>Share / Save CSV</span>
+                </button>
+             </div>
+        </div>
+
         {/* Danger Zone */}
         <div className="mt-10 pt-6 border-t border-slate-800">
              <h3 className="text-xs font-bold text-red-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                 Danger Zone
              </h3>
-             
              {!showResetConfirm ? (
                <button
                   type="button"

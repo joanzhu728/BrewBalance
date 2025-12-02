@@ -22,10 +22,6 @@ const App: React.FC = () => {
         const parsed = JSON.parse(stored);
         // Ensure defaults are merged
         const merged = { ...DEFAULT_SETTINGS, ...parsed };
-        
-        // Fix for startDate legacy issues (if user has old UTC date saved)
-        // If it's a fresh install or data seems missing, ensure local date is used.
-        // However, we respect saved start date if it exists.
         return merged;
       }
     } catch (e) {
@@ -151,7 +147,8 @@ const App: React.FC = () => {
               statsMap={statsMap} 
               settings={settings} 
               onAddEntry={handleAddEntry} 
-              streak={streak} 
+              streak={streak}
+              onUpdateSettings={setSettings}
             />
           )}
           {currentTab === 'add' && (
@@ -160,7 +157,11 @@ const App: React.FC = () => {
                 handleAddEntry(amount, note, date);
                 setCurrentTab('dashboard');
               }}
+              onNavigate={(tab) => setCurrentTab(tab)}
               currency={settings.currency}
+              settings={settings}
+              onUpdateSettings={setSettings}
+              statsMap={statsMap}
             />
           )}
           {currentTab === 'history' && (

@@ -98,39 +98,62 @@ export const calculateStats = (
     const dayEntries = entriesByDate[currentDateStr] || [];
     const spent = dayEntries.reduce((sum, e) => sum + e.amount, 0);
     
-    // --- Logic Split: Challenge Mode vs Normal Mode ---
+    // --- Rollover & Available Calculation ---
     
+    // Check for Custom Rollover (User Override)
+    // If a custom rollover is set for this day, we use it as the starting point, 
+    // ignoring calculations from previous days (or preserved values).
+    let isCustomRollover = false;
+    if (settings.customRollovers && settings.customRollovers[currentDateStr] !== undefined) {
+        currentRollover = settings.customRollovers[currentDateStr];
+        isCustomRollover = true;
+        // If we override manually, we should also clear any preserved state to avoid weird restoration later
+        if (preservedNormalRollover !== null) {
+            preservedNormalRollover = null; 
+        }
+    }
+
     let totalAvailable = 0;
     let remaining = 0;
     let statsRollover = 0;
 
     if (isChallengeDay) {
-        // PRESERVE ROLLOVER: If we just entered a challenge (preserved is null), 
-        // capture the current incoming rollover (from the last normal day) to save it.
-        if (preservedNormalRollover === null) {
+        // PRESERVE ROLLOVER (Only if not already preserved and not a manual override day)
+        if (preservedNormalRollover === null && !isCustomRollover) {
             preservedNormalRollover = currentRollover;
         }
 
         // CHALLENGE MODE LOGIC
         // 1. Available is strictly Base Budget (previous rollover is ignored/preserved).
-        totalAvailable = baseBudget; 
+        // NOTE: If user sets a custom rollover inside a challenge, we technically honor it 
+        // if we assume "Custom Rollover" implies "Starting Balance Adjustment".
+        // But the prompt implies this is for the "Balance Tab" (Calendar), usually associated with normal budgeting.
+        // For simplicity and to avoid cheating in challenges: 
+        // Standard Challenge: Rollover ignored.
+        // If Custom Rollover Set: We add it to available.
+        
+        if (isCustomRollover) {
+            totalAvailable = baseBudget + currentRollover;
+        } else {
+            totalAvailable = baseBudget;
+        }
+        
         remaining = totalAvailable - spent;
         
-        // 2. Accumulate savings
+        // 2. Accumulate savings (based on remaining)
         challengeAccumulatedSavings += remaining;
 
-        // 3. Stats rollover is 0 for UI
-        statsRollover = 0;
+        // 3. Stats rollover
+        statsRollover = isCustomRollover ? currentRollover : 0;
         
-        // 4. Update currentRollover for NEXT iteration to 0 
-        // (Challenges do not pass rollover to the next day within the challenge or immediately after).
+        // 4. Update currentRollover for NEXT iteration to 0
         currentRollover = 0;
 
     } else {
         // NORMAL MODE LOGIC
         
-        // RESTORE ROLLOVER: If we have a preserved rollover (coming out of a challenge), restore it.
-        if (preservedNormalRollover !== null) {
+        // RESTORE ROLLOVER: If we have a preserved rollover and we haven't manually overridden this day
+        if (preservedNormalRollover !== null && !isCustomRollover) {
             currentRollover = preservedNormalRollover;
             preservedNormalRollover = null;
         }
@@ -150,11 +173,11 @@ export const calculateStats = (
 
     // Determine status
     let status = BudgetStatus.UnderAlarm;
-    const alarmLimit = totalAvailable * settings.alarmThreshold;
+    const alarmLimit = totalAvailable > 0 ? totalAvailable * settings.alarmThreshold : 0;
 
     if (spent > totalAvailable) {
       status = BudgetStatus.OverBudget;
-    } else if (spent >= alarmLimit) {
+    } else if (totalAvailable > 0 && spent >= alarmLimit) {
       status = BudgetStatus.Warning;
     } else {
       status = BudgetStatus.UnderAlarm;
@@ -170,6 +193,7 @@ export const calculateStats = (
       status,
       entries: dayEntries,
       isCustomBudget,
+      isCustomRollover,
       isChallengeDay,
       challengeName: isChallengeDay ? challenge?.name : undefined,
       challengeSavedSoFar: isChallengeDay ? challengeAccumulatedSavings : undefined

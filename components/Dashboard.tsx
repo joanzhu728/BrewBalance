@@ -358,67 +358,101 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
     );
   };
 
+  const isUpcoming = challengeStats?.status === 'UPCOMING';
+
+  const renderChallengeCard = () => {
+    if (!settings.activeChallenge || !challengeStats) return null;
+    const ui = getStatusUI(challengeStats.status);
+    const isCardUpcoming = challengeStats.status === 'UPCOMING';
+
+    return (
+     <div className={`mb-4 bg-gradient-to-br ${ui.bgGradient} border ${ui.borderColor} p-4 rounded-3xl relative overflow-hidden shadow-lg shrink-0 group transition-all`}>
+         <div className={`absolute top-0 right-0 p-6 opacity-5 pointer-events-none ${ui.color}`}>
+             {ui.icon}
+         </div>
+         <div className="relative z-10">
+             <div className="flex items-center justify-between mb-2">
+                  <span className={`${ui.badgeBg} text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm flex items-center gap-1`}>
+                     {ui.miniIcon} {ui.label}
+                  </span>
+                 <div className="flex items-center gap-2">
+                     <button 
+                         onClick={() => setShowEditModal(true)}
+                         className={`p-2 rounded-full backdrop-blur-sm transition-colors border bg-slate-900/30 hover:bg-slate-900/60 ${ui.color} border-white/10`}
+                     >
+                         <Edit2 size={14} />
+                     </button>
+                     {!isCardUpcoming && (
+                        <span className={`${ui.color} text-[10px] font-bold uppercase tracking-wider opacity-80`}>
+                            {formattedDate}
+                        </span>
+                     )}
+                 </div>
+             </div>
+             
+             <div className="flex flex-col mb-2">
+                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                     <h1 className="text-2xl font-black text-white leading-tight tracking-tight break-words">
+                         {settings.activeChallenge.name}
+                     </h1>
+                     
+                     {/* CONDITIONAL STATS DISPLAY */}
+                     {isCardUpcoming ? (
+                         <div className="flex items-center gap-2 ml-auto shrink-0 mt-1">
+                            <span className={`text-xs font-bold ${ui.color} bg-slate-900/40 px-2 py-1 rounded-lg border border-white/5`}>
+                               Goal: {settings.activeChallenge.targetPercentage}%
+                            </span>
+                         </div>
+                     ) : (
+                         <div className="flex items-center gap-2 ml-auto shrink-0">
+                             <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
+                                 Day <span className="text-white">{challengeStats.dayNumber}</span>/{challengeStats.totalDays}
+                             </span>
+                             <span className="text-slate-600 font-bold hidden sm:inline">•</span>
+                             <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
+                                 <span className="text-white">{challengeStats.daysLeft}</span> Days Left
+                             </span>
+                         </div>
+                     )}
+                 </div>
+
+                 {settings.activeChallenge.purpose && (
+                     <div className="flex items-start gap-2 mt-1">
+                         <Target className={`shrink-0 mt-1 ${ui.color}`} size={16} />
+                         <span className="text-lg font-bold text-slate-200 leading-tight">
+                             {settings.activeChallenge.purpose}
+                         </span>
+                     </div>
+                 )}
+
+                 {/* UPCOMING SPECIFIC DATES */}
+                 {isCardUpcoming && (
+                    <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between gap-4 text-xs font-bold text-slate-300">
+                         <div className="flex flex-col">
+                            <span className={`text-[9px] uppercase tracking-wider ${ui.color} opacity-70`}>Starts</span>
+                            <span>{new Date(settings.activeChallenge.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                         </div>
+                         <ArrowRight size={14} className="text-slate-600" />
+                         <div className="flex flex-col text-right">
+                            <span className={`text-[9px] uppercase tracking-wider ${ui.color} opacity-70`}>Ends</span>
+                            <span>{new Date(settings.activeChallenge.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                         </div>
+                    </div>
+                 )}
+             </div>
+         </div>
+    </div>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col pb-24 overflow-hidden">
-      {/* --- CHALLENGE HEADER (Always Visible if Challenge exists) --- */}
-      {settings.activeChallenge && challengeStats && (() => {
-           const ui = getStatusUI(challengeStats.status);
-           return (
-            <div className={`mb-4 bg-gradient-to-br ${ui.bgGradient} border ${ui.borderColor} p-4 rounded-3xl relative overflow-hidden shadow-lg shrink-0 group transition-all`}>
-                <div className={`absolute top-0 right-0 p-6 opacity-5 pointer-events-none ${ui.color}`}>
-                    {ui.icon}
-                </div>
-                <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                         <span className={`${ui.badgeBg} text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm flex items-center gap-1`}>
-                            {ui.miniIcon} {ui.label}
-                         </span>
-                        <div className="flex items-center gap-2">
-                            <button 
-                                onClick={() => setShowEditModal(true)}
-                                className={`p-2 rounded-full backdrop-blur-sm transition-colors border bg-slate-900/30 hover:bg-slate-900/60 ${ui.color} border-white/10`}
-                            >
-                                <Edit2 size={14} />
-                            </button>
-                            <span className={`${ui.color} text-[10px] font-bold uppercase tracking-wider opacity-80`}>
-                                {formattedDate}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div className="flex flex-col mb-2">
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                            <h1 className="text-2xl font-black text-white leading-tight tracking-tight break-words">
-                                {settings.activeChallenge.name}
-                            </h1>
-                            {/* Stats moved here */}
-                            <div className="flex items-center gap-2 ml-auto shrink-0">
-                                <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
-                                    Day <span className="text-white">{challengeStats.dayNumber}</span>/{challengeStats.totalDays}
-                                </span>
-                                <span className="text-slate-600 font-bold hidden sm:inline">•</span>
-                                <span className={`text-base font-bold ${ui.color} uppercase tracking-wider`}>
-                                    <span className="text-white">{challengeStats.daysLeft}</span> Days Left
-                                </span>
-                            </div>
-                        </div>
+      {/* --- ACTIVE CHALLENGE HEADER (Only if NOT upcoming) --- */}
+      {!isUpcoming && settings.activeChallenge && challengeStats && renderChallengeCard()}
 
-                        {settings.activeChallenge.purpose && (
-                            <div className="flex items-start gap-2 mt-1">
-                                <Target className={`shrink-0 mt-1 ${ui.color}`} size={16} />
-                                <span className="text-lg font-bold text-slate-200 leading-tight">
-                                    {settings.activeChallenge.purpose}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-           </div>
-           );
-      })()}
-
-      {/* --- CONDITIONAL CONTENT --- */}
-      {!settings.activeChallenge && (
+      {/* --- CONDITIONAL HEADER (Date Header) --- */}
+      {/* Show if no challenge OR if challenge is upcoming (so the top slot is empty of challenge card) */}
+      {(!settings.activeChallenge || isUpcoming) && (
            <div className="mb-2 px-1 shrink-0">
                 <h2 className="text-slate-400 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)] ${isBudgetSet ? '' : 'bg-slate-600'}`} style={{ backgroundColor: isBudgetSet ? statusDetails.color : undefined }}></span>
@@ -436,8 +470,8 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                 <SavingsProgressBar label="Total Challenge Progress" saved={challengeStats.totalSavedSoFar} total={challengeStats.totalBudget} />
             </div>
         ) : (
-            // --- NORMAL VIEW ---
-            <div className={`relative p-5 rounded-[2.5rem] border ${statusDetails.border} ${statusDetails.bg} transition-all duration-500 shadow-lg flex flex-col flex-1 min-h-0`}>
+            // --- NORMAL VIEW (Also used for Upcoming days) ---
+            <div className={`relative p-5 rounded-[2.5rem] border ${statusDetails.border} ${statusDetails.bg} transition-all duration-500 shadow-lg flex flex-col grow shrink-0 mb-4`}>
                 
                 {/* Card Header: Label + Streak */}
                 <div className="flex justify-between items-start mb-4 shrink-0">
@@ -482,7 +516,7 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
                                 Current Balance
                             </p>
-                            <p className={`text-6xl sm:text-7xl font-black tracking-tighter drop-shadow-sm leading-none ${todayStats.remaining >= 0 ? 'text-amber-400' : 'text-red-500'}`}>
+                            <p className={`text-6xl sm:text-7xl font-black tracking-tighter drop-shadow-sm leading-none ${statusDetails.text}`}>
                                 {currency}{Math.round(todayStats.remaining)}
                             </p>
                         </div>
@@ -535,8 +569,8 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
             </div>
         )}
 
-        <div className="mt-4 mb-2 text-center shrink-0 px-2">
-            {settings.activeChallenge ? (
+        <div className="mt-auto mb-4 text-center shrink-0 px-2">
+            {settings.activeChallenge && !isUpcoming ? (
                 <div className="mx-2 mb-2 py-4 px-4 bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center gap-3 shadow-sm text-center">
                     <div className="bg-emerald-500/20 p-2 rounded-full text-emerald-400 hidden sm:block">
                         <PiggyBank size={18} />
@@ -553,6 +587,9 @@ const Dashboard: React.FC<DashboardProps> = ({ statsMap, settings, streak, onUpd
                 </div>
             )}
         </div>
+
+        {/* --- UPCOMING CHALLENGE CARD (Bottom placement) --- */}
+        {isUpcoming && settings.activeChallenge && challengeStats && renderChallengeCard()}
       </div>
 
       {/* Edit Challenge Modal */}

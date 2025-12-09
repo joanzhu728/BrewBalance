@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Target, Trophy, Percent, Repeat, CalendarOff } from 'lucide-react';
+import { Target, Trophy, Percent, Repeat, CalendarOff, AlertCircle } from 'lucide-react';
 import { Challenge, RecurrenceType } from '../types';
+import { getTodayISO } from '../utils/dateUtils';
 
 interface ChallengeFormProps {
   initialData?: Partial<Challenge>;
@@ -13,17 +14,18 @@ interface ChallengeFormProps {
 const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, submitLabel }) => {
   const [name, setName] = useState(initialData?.name || '');
   const [purpose, setPurpose] = useState(initialData?.purpose || '');
-  const [startDate, setStartDate] = useState(initialData?.startDate || new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(initialData?.startDate || getTodayISO());
   const [endDate, setEndDate] = useState(initialData?.endDate || '');
   const [targetPercentage, setTargetPercentage] = useState(initialData?.targetPercentage ?? 100);
   const [recurrence, setRecurrence] = useState<RecurrenceType>(initialData?.recurrence || 'none');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState(initialData?.recurrenceEndDate || '');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || '');
       setPurpose(initialData.purpose || '');
-      setStartDate(initialData.startDate || new Date().toISOString().split('T')[0]);
+      setStartDate(initialData.startDate || getTodayISO());
       setEndDate(initialData.endDate || '');
       setTargetPercentage(initialData.targetPercentage ?? 100);
       setRecurrence(initialData.recurrence || 'none');
@@ -33,26 +35,44 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError(null);
+    const today = getTodayISO();
+
     // Strict validation
     if (!name || name.trim() === '') {
-        alert("Please enter a challenge name.");
+        setError("Please enter a challenge name.");
         return;
     }
     if (!startDate) {
-        alert("Please select a start date.");
+        setError("Please select a start date.");
         return;
     }
+    
+    // Prevent past start dates
+    if (startDate < today) {
+        // If creating a new challenge, start date cannot be in the past
+        if (!initialData?.id) {
+             setError("Challenge start date cannot be in the past.");
+             return;
+        }
+        // If editing an existing challenge, user cannot CHANGE the start date to a past date.
+        // They can keep it if it was already in the past (i.e. unchanged).
+        if (initialData.startDate && startDate !== initialData.startDate) {
+             setError("Cannot change start date to a past date.");
+             return;
+        }
+    }
+
     if (!endDate) {
-        alert("Please select an end date for the challenge.");
+        setError("Please select an end date for the challenge.");
         return;
     }
     if (endDate < startDate) {
-      alert("End date must be after start date.");
+      setError("End date must be after start date.");
       return;
     }
     if (recurrence !== 'none' && recurrenceEndDate && recurrenceEndDate <= endDate) {
-        alert("Recurrence end date must be after the challenge end date.");
+        setError("Recurrence end date must be after the challenge end date.");
         return;
     }
 
@@ -69,6 +89,13 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-950/20 border border-red-900/50 p-3 rounded-xl flex items-start gap-2 text-red-400 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <p>{error}</p>
+        </div>
+      )}
+
       <div>
         <label className="text-[10px] font-bold text-slate-500 uppercase">Challenge Name <span className="text-red-500">*</span></label>
         <input 

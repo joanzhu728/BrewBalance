@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DailyStats, BudgetStatus, Settings } from '../types';
@@ -69,6 +70,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
       onUpdateSettings({ ...settings, customBudgets: updatedCustomBudgets });
   };
 
+  const handleSaveRollover = (date: string, amount: number) => {
+      const updatedCustomRollovers = { ...(settings.customRollovers || {}) };
+      updatedCustomRollovers[date] = amount;
+      onUpdateSettings({ ...settings, customRollovers: updatedCustomRollovers });
+  };
+
+  const handleResetRollover = (date: string) => {
+      const updatedCustomRollovers = { ...(settings.customRollovers || {}) };
+      delete updatedCustomRollovers[date];
+      onUpdateSettings({ ...settings, customRollovers: updatedCustomRollovers });
+  };
+
   return (
     <div className="h-full flex flex-col pb-20">
       <div className="flex items-center justify-between mb-6 bg-slate-900 p-4 rounded-3xl shadow-sm border border-slate-800">
@@ -107,6 +120,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
             const statusClass = hasStats ? getStatusColor(stats.status, isFuture) : 'bg-slate-950 border-slate-800 text-slate-700';
             const currencySymbol = settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency;
             const isCustom = stats?.isCustomBudget;
+            const isCustomRollover = stats?.isCustomRollover;
 
             return (
               <button 
@@ -117,7 +131,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
               >
                 <div className="flex items-start gap-0.5">
                      <span className={`text-xs font-bold ${hasStats ? (isFuture ? 'opacity-70' : '') : 'opacity-50'}`}>{dayNum}</span>
-                     {isCustom && <div className="w-1 h-1 rounded-full bg-amber-500 mt-1"></div>}
+                     {(isCustom || isCustomRollover) && <div className="w-1 h-1 rounded-full bg-amber-500 mt-1"></div>}
                 </div>
                 {hasStats && (
                     <span className={`text-[9px] mt-0.5 font-bold truncate w-full text-center ${isFuture ? 'opacity-60 italic' : 'opacity-90'}`}>
@@ -149,6 +163,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
         currency={settings.currency === 'JPY' ? '¥' : settings.currency === '$' ? '$' : settings.currency}
         onSaveBudget={handleSaveBudget}
         onResetBudget={handleResetBudget}
+        onSaveRollover={handleSaveRollover}
+        onResetRollover={handleResetRollover}
       />
     </div>
   );

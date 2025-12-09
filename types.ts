@@ -32,6 +32,7 @@ export interface Settings {
   endDate: string | null; // YYYY-MM-DD or null
   logo: string | null; // Base64 encoded image string
   customBudgets?: Record<string, number>; // Date (YYYY-MM-DD) -> Amount
+  customRollovers?: Record<string, number>; // Date (YYYY-MM-DD) -> Amount (Opening balance adjustment)
   userName: string;
   activeChallenge?: Challenge | null;
   pastChallenges?: Challenge[];
@@ -55,6 +56,7 @@ export interface DailyStats {
   status: BudgetStatus;
   entries: Entry[];
   isCustomBudget?: boolean;
+  isCustomRollover?: boolean;
   // Challenge specific props
   isChallengeDay?: boolean;
   challengeName?: string;

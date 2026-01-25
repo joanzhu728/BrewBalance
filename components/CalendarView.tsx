@@ -112,7 +112,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ statsMap, settings, onUpdat
           ))}
 
           {dates.map(dateStr => {
-            const dayNum = parseInt(dateStr.split('-')[2], 10);
+            const dayNum = parseInt(dateStr.split('-')[2] || '0', 10);
             const stats = statsMap[dateStr];
             const hasStats = !!stats;
             const isFuture = dateStr > todayISO;

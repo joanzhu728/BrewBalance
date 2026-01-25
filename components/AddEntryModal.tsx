@@ -4,14 +4,14 @@ import { X, Beer, Check } from 'lucide-react';
 interface AddEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (amount: number, note: string, date: string) => void;
+  onSave: (amount: number, note: string, date: Date) => void;
   currency: string;
 }
 
 const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, currency }) => {
   const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [note, setNote] = useState<string>('');
+  const [date, setDate] = useState(new Date());
 
   if (!isOpen) return null;
 
@@ -67,8 +67,8 @@ const AddEntryModal: React.FC<AddEntryModalProps> = ({ isOpen, onClose, onSave, 
              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
              <input 
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={date.toISOString().split('T')[0]}
+                onChange={(e) => setDate(new Date(e.target.value))}
                 className="w-full p-4 bg-slate-950 rounded-2xl border-2 border-slate-800 focus:border-amber-500 outline-none font-bold text-slate-300 scheme-dark"
              />
           </div>

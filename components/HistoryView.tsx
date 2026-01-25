@@ -27,7 +27,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
             if (!groups[entry.date]) {
                 groups[entry.date] = [];
             }
-            groups[entry.date].push(entry);
+            groups[entry.date]!.push(entry);
         });
         return groups;
     }, [entries]);
@@ -104,7 +104,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries, settings, onEditEntr
                                     </div>
 
                                     <div className="space-y-3">
-                                        {groupedEntries[date].map(entry => (
+                                        {groupedEntries[date]!.map(entry => (
                                             <button
                                                 key={entry.id}
                                                 onClick={() => onEditEntry(entry)}

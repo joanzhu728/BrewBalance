@@ -3,7 +3,7 @@ export const formatDateISO = (date: Date): string => {
   // Use local time for date string generation to respect user timezone
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - offset * 60 * 1000);
-  return localDate.toISOString().split('T')[0];
+  return localDate.toISOString().split('T')[0]!;
 };
 
 export const isWeekend = (dateStr: string): boolean => {
@@ -30,7 +30,7 @@ export const addDays = (dateStr: string, days: number): string => {
   // Treat dateStr as UTC midnight to avoid timezone shifting issues
   const date = new Date(dateStr);
   date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0]!;
 };
 
 export const addMonths = (dateStr: string, months: number): string => {
@@ -46,5 +46,5 @@ export const addMonths = (dateStr: string, months: number): string => {
       date.setUTCDate(0);
   }
   
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0]!;
 };

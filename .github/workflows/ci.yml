@@ -18,5 +18,6 @@ jobs:
                   node-version: 24
                   cache: "npm"
             - run: npm ci
+            - run: npx tsc
             - run: npx playwright install --with-deps
             - run: npm run test -- --reporter=github

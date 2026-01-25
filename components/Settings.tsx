@@ -1,19 +1,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsType, Entry, DailyStats } from '../types';
+import { Settings as SettingsType, DailyStats } from '../types';
 import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2 } from 'lucide-react';
 import { APP_VERSION } from '../constants';
 import { testId } from '../utils/testUtils';
 
 interface SettingsProps {
   settings: SettingsType;
-  entries: Entry[];
   statsMap: Record<string, DailyStats>;
   onSave: (newSettings: SettingsType) => void;
   onReset: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave, onReset }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset }) => {
   const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,11 +100,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
     const today = new Date().toISOString().split('T')[0];
 
     const exportRows = allDates.filter(date => {
-      const isPastOrToday = date <= today;
-      const hasEntries = statsMap[date].entries.length > 0;
+      const isPastOrToday = date <= today!;
+      const hasEntries = statsMap[date] && statsMap[date].entries.length > 0;
       return isPastOrToday || hasEntries;
     }).map(date => {
       const stats = statsMap[date];
+      if (!stats) return null;
       const notes = stats.entries
         .map(e => e.note)
         .filter(n => n && n.trim() !== '')
@@ -121,7 +121,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, entries, statsMap, onSave
         stats.remaining.toFixed(2),
         stats.isChallengeDay ? stats.challengeSavedSoFar?.toFixed(2) : ''
       ].join(',');
-    });
+    }).filter((row): row is string => row !== null);
 
     return [headers.join(','), ...exportRows].join('\n');
   };

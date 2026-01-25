@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
 import { Beer, Check, Trophy } from 'lucide-react';
+
 import { Settings, Challenge, DailyStats, TabView } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 import { testId } from '../utils/testUtils';
+
 import ChallengeForm from './ChallengeForm';
 
 interface AddEntryScreenProps {

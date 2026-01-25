@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings as SettingsType, DailyStats } from '../types';
 import { Save, Trash2, AlertTriangle, RefreshCw, User, Image as ImageIcon, Upload, FileText, Share2 } from 'lucide-react';
+
+import { Settings as SettingsType, DailyStats } from '../types';
 import { APP_VERSION } from '../constants';
 import { testId } from '../utils/testUtils';
 
@@ -66,8 +67,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, statsMap, onSave, onReset
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const MAX_SIZE = 512;
-        let width = img.width;
-        let height = img.height;
+        const width = img.width;
+        const height = img.height;
         const size = Math.min(width, height);
         const startX = (width - size) / 2;
         const startY = (height - size) / 2;

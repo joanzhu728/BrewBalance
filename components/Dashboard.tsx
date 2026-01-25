@@ -2,9 +2,11 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Flame, ArrowRight, Trophy, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle, PiggyBank } from 'lucide-react';
+
 import { DailyStats, BudgetStatus, Settings, Challenge, ChallengeStatus } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';
+
 import ChallengeForm from './ChallengeForm';
 
 interface DashboardProps {

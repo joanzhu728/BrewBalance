@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Trash2, Beer, AlertCircle } from 'lucide-react';
+
 import { Entry } from '../types';
 
 interface EditEntryModalProps {

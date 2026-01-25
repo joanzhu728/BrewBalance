@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw, TrendingDown, TrendingUp } from 'lucide-react';
+
 import { DailyStats } from '../types';
 
 interface DayDetailModalProps {

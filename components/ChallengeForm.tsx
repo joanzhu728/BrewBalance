@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Target, Trophy, Percent, Repeat, CalendarOff, AlertCircle } from 'lucide-react';
+
 import { Challenge, RecurrenceType } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 
@@ -83,7 +84,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       endDate,
       targetPercentage,
       recurrence,
-      ...(recurrence !== 'none' ? { recurrenceEndDate: recurrenceEndDate! } : {})
+      ...(recurrence !== 'none' ? { recurrenceEndDate: recurrenceEndDate } : {})
     });
   };
 

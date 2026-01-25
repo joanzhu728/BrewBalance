@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 export const generateAppLogo = async (): Promise<string> => {
   try {
     // Ensure API Key is available as per environment requirements
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env['API_KEY'];
     if (!apiKey) {
       throw new Error("API Key not found in environment");
     }

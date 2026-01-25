@@ -18,7 +18,7 @@ export const calculateStats = (
     if (!entriesByDate[entry.date]) {
       entriesByDate[entry.date] = [];
     }
-    entriesByDate[entry.date].push(entry);
+    entriesByDate[entry.date]!.push(entry);
   });
 
   let currentDateStr = settings.startDate;
@@ -27,7 +27,7 @@ export const calculateStats = (
   let endDateCalcStr = targetDateStr && targetDateStr > todayStr ? targetDateStr : todayStr;
 
   // If there are future entries beyond today/target, extend calculation
-  const lastEntryDate = sortedEntries.length > 0 ? sortedEntries[sortedEntries.length - 1].date : settings.startDate;
+  const lastEntryDate = sortedEntries.length > 0 ? sortedEntries[sortedEntries.length - 1]!.date : settings.startDate;
   if (lastEntryDate > endDateCalcStr) {
     endDateCalcStr = lastEntryDate;
   }
@@ -87,7 +87,7 @@ export const calculateStats = (
     if (!settings.endDate || currentDateStr <= settings.endDate) {
         // Check for custom override first
         if (settings.customBudgets && settings.customBudgets[currentDateStr] !== undefined) {
-            baseBudget = settings.customBudgets[currentDateStr];
+            baseBudget = settings.customBudgets[currentDateStr]!;
             isCustomBudget = true;
         } else {
             baseBudget = isWknd ? settings.weekendBudget : settings.weekdayBudget;
@@ -105,7 +105,7 @@ export const calculateStats = (
     // ignoring calculations from previous days (or preserved values).
     let isCustomRollover = false;
     if (settings.customRollovers && settings.customRollovers[currentDateStr] !== undefined) {
-        currentRollover = settings.customRollovers[currentDateStr];
+        currentRollover = settings.customRollovers[currentDateStr]!;
         isCustomRollover = true;
         // If we override manually, we should also clear any preserved state to avoid weird restoration later
         if (preservedNormalRollover !== null) {
@@ -195,8 +195,7 @@ export const calculateStats = (
       isCustomBudget,
       isCustomRollover,
       isChallengeDay,
-      challengeName: isChallengeDay ? challenge?.name : undefined,
-      challengeSavedSoFar: isChallengeDay ? challengeAccumulatedSavings : undefined
+      ...(isChallengeDay ? { challengeName: challenge?.name, challengeSavedSoFar: challengeAccumulatedSavings } : {})
     };
     
     currentDateStr = addDays(currentDateStr, 1);
@@ -253,7 +252,7 @@ export const calculateChallengeTotalBudget = (challenge: Challenge, settings: Se
         const isWknd = isWeekend(curr);
         let dailyBudget = 0;
         if (settings.customBudgets && settings.customBudgets[curr] !== undefined) {
-            dailyBudget = settings.customBudgets[curr];
+            dailyBudget = settings.customBudgets[curr]!;
         } else {
             dailyBudget = isWknd ? settings.weekendBudget : settings.weekdayBudget;
         }
@@ -278,7 +277,7 @@ export const calculateChallengeBudgetSoFar = (challenge: Challenge, settings: Se
         const isWknd = isWeekend(curr);
         let dailyBudget = 0;
         if (settings.customBudgets && settings.customBudgets[curr] !== undefined) {
-            dailyBudget = settings.customBudgets[curr];
+            dailyBudget = settings.customBudgets[curr]!;
         } else {
             dailyBudget = isWknd ? settings.weekendBudget : settings.weekdayBudget;
         }

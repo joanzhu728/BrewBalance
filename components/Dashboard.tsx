@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Flame, TrendingUp, ArrowRight, History, Trophy, Calendar, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle, Sparkles, PiggyBank } from 'lucide-react';
+import { Flame, ArrowRight, Trophy, Target, Edit2, X, Ban, AlertOctagon, CheckCircle2, Clock, AlertTriangle, PiggyBank } from 'lucide-react';
 import { DailyStats, BudgetStatus, Settings, Challenge, ChallengeStatus } from '../types';
 import { getTodayISO } from '../utils/dateUtils';
 import { calculateChallengeTotalBudget, isChallengeFailed } from '../utils/financeHelpers';

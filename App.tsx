@@ -273,7 +273,6 @@ const App: React.FC = () => {
           {currentTab === 'settings' && (
             <SettingsView
               settings={settings}
-              entries={entries}
               statsMap={statsMap}
               onSave={(newSettings) => {
                 setSettings(newSettings);

@@ -83,7 +83,7 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({ initialData, onSubmit, su
       endDate,
       targetPercentage,
       recurrence,
-      recurrenceEndDate: recurrence !== 'none' ? recurrenceEndDate : undefined
+      ...(recurrence !== 'none' ? { recurrenceEndDate: recurrenceEndDate! } : {})
     });
   };
 

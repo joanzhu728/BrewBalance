@@ -148,8 +148,9 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date</label>
+                                    <label htmlFor="date" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date</label>
                                     <input
+                                        id="date"
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
@@ -159,8 +160,9 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Note (Optional)</label>
+                                    <label htmlFor="note" className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Note (Optional)</label>
                                     <input
+                                        id="note"
                                         type="text"
                                         enterKeyHint="done"
                                         placeholder="e.g., Lager at Pub"

@@ -12,8 +12,8 @@ test.describe('BrewBalance App', () => {
         // Check that the app title is visible
         await expect(page.locator('[data-testid="app-title"]')).toBeVisible();
 
-        // Check that the logo (beer mug SVG) is visible in the header
-        await expect(page.locator('[data-testid="app-logo"] svg')).toBeVisible();
+        // Check that the logo (custom PNG icon) is visible in the header
+        await expect(page.locator('[data-testid="app-logo"] img')).toBeVisible();
 
         // Check that navigation tabs are present
         await expect(page.locator('[data-testid="nav-dashboard"]')).toBeVisible();

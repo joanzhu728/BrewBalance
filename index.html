@@ -1,75 +1,85 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="BrewBalance" />
-    
-    <!-- Prevent caching to ensure PWA updates -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
-    <title>BrewBalance</title>
-    
-    <!-- New Beer Mug Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23FBBF24' rx='100'/%3E%3Cpath d='M340 210H370C403.137 210 430 236.863 430 270C430 303.137 403.137 330 370 330H340' stroke='%230F172A' stroke-width='32' stroke-linecap='round' fill='none'/%3E%3Cpath d='M140 160H340V370C340 408.66 308.66 440 270 440H210C171.34 440 140 408.66 140 370V160Z' fill='%23FBBF24' stroke='%230F172A' stroke-width='32'/%3E%3Cpath d='M120 160C120 125 150 110 170 120C185 95 230 90 250 110C270 90 320 95 340 120C360 110 370 130 360 160H120Z' fill='%23FFF7ED' stroke='%230F172A' stroke-width='32' stroke-linejoin='round'/%3E%3C/svg%3E" />
-    
-    <link rel="manifest" href="/manifest.json" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Reset tap highlight color */
-      * {
-        -webkit-tap-highlight-color: transparent;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BrewBalance" />
 
-      /* Custom scrollbar for a cleaner look */
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0f172a; /* Slate 900 */
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #334155; /* Slate 700 */
-        border-radius: 3px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #475569; /* Slate 600 */
-      }
-      
-      /* Remove up/down arrows from number inputs */
-      /* Chrome, Safari, Edge, Opera */
-      input::-webkit-outer-spin-button,
-      input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
+  <!-- Prevent caching to ensure PWA updates -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
-      /* Firefox */
-      input[type=number] {
-        -moz-appearance: textfield;
-      }
-      
-      /* Safe area padding utilities for iOS PWA */
-      .pt-safe-top {
-        padding-top: env(safe-area-inset-top);
-      }
-      .pb-safe-bottom {
-        padding-bottom: env(safe-area-inset-bottom);
-      }
+  <title>BrewBalance</title>
 
-      /* CRITICAL FIX FOR IOS PWA KEYBOARD */
-      /* Force user-select text on inputs to ensure focus works */
-      input, textarea, select {
-        -webkit-user-select: text !important;
-        user-select: text !important;
-      }
-    </style>
+  <!-- App Icon -->
+  <link rel="icon" type="image/png" href="/Default app icon.png" />
+
+  <link rel="manifest" href="/manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Reset tap highlight color */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Custom scrollbar for a cleaner look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+      /* Slate 900 */
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      /* Slate 700 */
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+      /* Slate 600 */
+    }
+
+    /* Remove up/down arrows from number inputs */
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    /* Safe area padding utilities for iOS PWA */
+    .pt-safe-top {
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .pb-safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* CRITICAL FIX FOR IOS PWA KEYBOARD */
+    /* Force user-select text on inputs to ensure focus works */
+    input,
+    textarea,
+    select {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -83,8 +93,10 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-50 antialiased">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body class="bg-slate-950 text-slate-50 antialiased">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

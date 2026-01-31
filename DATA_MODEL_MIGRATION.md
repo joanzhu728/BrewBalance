@@ -19,62 +19,28 @@ Desired State
 - `today` and future dates reflect current settings.
 - Provide an auditable source-of-truth for the applied per-day budgets and rollovers used to compute historical balances.
 
-High-level approaches
+High-level approach
 
-Option A — Per-day snapshots (recommended for quick delivery)
-
-- Persist per-date applied values at the time a date is first materialized: `appliedBaseBudget` and `appliedRollover` (and optionally `appliedAlarmThreshold`).
-- For dates < `today`, `calculateStats` should read the persisted snapshot and use the applied values; if a snapshot is missing, compute then persist it.
-- Minimal invasive changes, easy migration (materialize historical dates on upgrade), small storage overhead.
-
-Option B — Immutable Transaction Log (ledger) (recommended long-term)
+Immutable Transaction Log (ledger) — recommended
 
 - Maintain an append-only transaction log; every state change is a transaction (user settings edits, system-generated daily budget creation, entries, rollovers, challenge events).
 - Derive state (settings and per-day budgets) by replaying transactions up to a given date; persist periodic checkpoints (snapshots) to avoid replay cost.
-- Strong auditability and extensibility (undo/redo, server sync), but larger implementation scope and migration complexity.
+- Strong auditability and extensibility (undo/redo, server sync). Larger implementation scope and migration complexity compared to a simple snapshot approach, but provides a robust long-term foundation.
 
-Data model changes (both options)
+Data model changes
 
-- `types.ts` additions (Option A):
-  - Add to `DailyStats`: `appliedBaseBudget?: number`, `appliedRollover?: number`, `appliedAlarmThreshold?: number`.
-  - Add storage key in `constants.ts` for daily snapshots, e.g. `STORAGE_KEYS.DAILY_SNAPSHOTS`.
-- `types.ts` additions (Option B):
-  - New `Transaction` union type and `TransactionType` enum; example transactions: `ENTRY_ADDED`, `SETTINGS_UPDATED`, `DAILY_BUDGET_CREATED`, `CUSTOM_ROLLOVER_SET`, `CHALLENGE_CREATED`, `CHALLENGE_ARCHIVED`.
-  - Add `STORAGE_KEYS.TRANSACTIONS` and `STORAGE_KEYS.CHECKPOINTS`.
+- Define a `Transaction` model in `types.ts` and a `TransactionType` enum. Example transactions: `ENTRY_ADDED`, `SETTINGS_UPDATED`, `DAILY_BUDGET_CREATED`, `CUSTOM_ROLLOVER_SET`, `CHALLENGE_CREATED`, `CHALLENGE_ARCHIVED`.
+- Add storage keys in `constants.ts`: `STORAGE_KEYS.TRANSACTIONS` and `STORAGE_KEYS.CHECKPOINTS`.
+- Consider adding lightweight persisted checkpoints that store derived `DailyStats` up to a checkpoint date to avoid full replay on startup.
 
-Migration steps — Option A (per-day snapshots)
-
-1. Add new fields and storage key
-   - Update `types.ts` for `DailyStats` to include `appliedBaseBudget`/`appliedRollover`.
-   - Add `STORAGE_KEYS.DAILY_SNAPSHOTS` in `constants.ts`.
-2. Snapshot storage helpers
-   - Add `utils/storageHelpers.ts` with functions: `loadDailySnapshots(): Record<string, Snapshot>`, `saveDailySnapshot(date, snapshot)`, and `saveDailySnapshots(map)`.
-3. Modify `calculateStats`
-   - Accept an optional `snapshots` map parameter (or load inside the function).
-   - When computing each date:
-     - If `date < today`: try to read snapshot; if found, use `appliedBaseBudget`/`appliedRollover` to compute totals (still include `entries`), and set `DailyStats.applied*` fields.
-     - If snapshot missing: compute using current logic, then persist a snapshot for that date immediately.
-     - If `date >= today`: compute using live `settings` as before; optionally do not persist snapshots until day completes.
-4. App startup migration/backfill
-   - On app load in `App.tsx`, detect whether snapshots storage exists.
-   - If missing or partial, compute `statsMap` for historical dates (up to `today - 1`) and persist snapshots for each past date to lock history. Limit to a reasonable window if necessary (e.g., from `settings.startDate` to `today - 1`).
-   - Save a migration flag in `localStorage` to avoid repeating heavy work.
-5. Update codepaths using budgets
-   - Update `calculateChallengeTotalBudget`, CSV export, and any other code that computes totals across dates to consult snapshots for past dates (or use `calculateStats` which now uses snapshots).
-6. Tests and verification
-   - Add unit tests reproducing the example: set `weekdayBudget=300`, materialize past week, change to `200`, assert past dates still show `300` while today/future show `200`.
-7. Rollout
-   - Ship behind a feature flag if desired; otherwise perform silent migration on first run.
-
-Migration steps — Option B (transaction log)
-
+Migration steps — Ledger (transaction log)
 1. Define `Transaction` model and storage keys
    - Create `types.Transaction` union and `STORAGE_KEYS.TRANSACTIONS`, `STORAGE_KEYS.CHECKPOINTS`.
 2. Implement storage helpers
    - `utils/transactionStore.ts` to append and read transactions, with deduplication helpers for system-generated items (e.g. `DAILY_BUDGET` per date).
 3. Build replay engine
    - Implement `utils/replayEngine.ts` with:
-     - `replay(transactions, fromCheckpoint?)` => produces derived `settings`, `entries`, and materialized per-date `DailyStats` up to desired date.
+     - `replay(transactions, fromCheckpoint?)` => produces derived `settings`, `entries`, and materialized per-date `DailyStats` up to a desired date.
      - Checkpointing support: persist snapshot state and last-applied transaction index to accelerate startup.
 4. Deterministic daily-budget creation
    - When materializing a date, if no `DAILY_BUDGET` tx exists for that date, create and append one using the effective settings as of that date (derived by replaying `SETTINGS_UPDATED` transactions up to that date).
@@ -86,9 +52,9 @@ Migration steps — Option B (transaction log)
    - Replace direct `settings` writes in UI code with appends of `SETTINGS_UPDATED` transactions and update local derived `settings` via replay result for UI convenience.
    - Update `calculateStats` to be a wrapper over the replay/materializer.
 7. Tests and verification
-   - Tests for replay determinism, idempotency, and migration correctness.
+   - Tests for replay determinism, idempotency, migration correctness, and preserving historical budgets after settings edits.
 8. Rollout considerations
-   - Because this is a larger change, ship behind a migration path and ensure robust backups/exports in settings.
+   - Because this is a larger change, ship with a migration path, backups, and an initial checkpoint creation step to minimize startup cost.
 
 Operational details
 
@@ -117,10 +83,9 @@ Risks & mitigation
 - Risk: subtle differences between computed historical budgets and replayed/serialized ones — mitigate by validating before finalizing migration and preserving original computed values when seeding snapshots/transactions.
 
 Recommended next steps
-
-1. Decide approach: quick fix (Option A) vs ledger (Option B).
-2. If Option A: implement `applied*` fields, storage helpers, modify `calculateStats`, run migration to materialize past dates.
-3. If Option B: design `Transaction` types, implement `transactionStore` and `replayEngine`, write migration that seeds transactions and creates initial checkpoint.
+1. Proceed with the ledger approach: design `Transaction` types, implement `transactionStore` and `replayEngine`, and write a migration that seeds transactions and creates an initial checkpoint.
+2. Implement the replay engine and transaction append helpers, then seed transactions for existing `entries` and historical `DAILY_BUDGET` items using the current computed `statsMap` to preserve history.
+3. Add tests for replay determinism and migration correctness, then stage rollout with backups and a migration flag.
 
 ---
 

@@ -1,0 +1,20 @@
+# Enforce LF for text files to avoid Windows CRLF issues in CI
+# See https://git-scm.com/docs/gitattributes
+
+# Default: treat files as text and normalize to LF in the repo
+* text=auto eol=lf
+
+# Specify common source and config files explicitly
+*.{js,jsx,ts,tsx,css,scss,html,md,json,yml,yaml,xml,ini,toml,conf} text eol=lf
+
+# Preserve binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.tgz binary
+*.pdf binary
+*.mp4 binary
